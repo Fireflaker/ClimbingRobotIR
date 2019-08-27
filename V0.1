@@ -1,0 +1,98 @@
+//#include "Arduino.h"
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+void setup()
+{
+
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      GO_UP();
+      Serial.println("GO_UP_END");
+    }
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+      GO_DOWN();
+      Serial.println("GO_DOWN_END");
+    }
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      GO_STOP();
+      Serial.println("GO_STOP_END");
+    }
+  }
+}
+
+void GO_UP() {
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(LPWM, 0);
+  {
+    for (int i = 0; i < 256; i++) {
+      analogWrite(RPWM, i);
+      delay(5);
+    }
+  }
+}
+
+
+void GO_DOWN() {
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(RPWM, 0);
+  for (int i = 0; i < 256; i++) {
+    analogWrite(LPWM, i);
+    delay(5);
+  }
+}
+
+void GO_STOP() {
+  digitalWrite(REN, LOW);
+  digitalWrite(LEN, LOW);
+  //  for (int i = 0; i < 256; i++) {
+  //    analogWrite(LPWM, (255 - i));
+  //    analogWrite(RPWM, (255 - i));
+  //    delay(5);
+  //  }
+  delay(200);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(RPWM, 0);
+  analogWrite(LPWM, 0);
+}
