@@ -1,0 +1,1185 @@
+
+Basic Test
+//#include "Arduino.h"
+
+
+#define RPWM 5
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+void setup()
+{
+
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+
+  Serial.begin(9600);
+
+}
+
+void loop()
+{
+  for (int i = 0; i < 256; i++) {
+    analogWrite(RPWM, i);
+    delay(100);
+  }
+  for (int i = 255; i > 0; i--) {
+    analogWrite(RPWM, i);
+    delay(100);
+  }
+
+}
+
+
+IR TEST
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+void setup() {
+  Serial.begin(9600);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+}
+
+void loop() {
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+  }
+}
+
+
+
+IR CODES
+Up = FF629D
+
+Dn = FFA857
+
+
+
+Ver0.1
+//#include "Arduino.h"
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      GO_UP();
+      Serial.println("GO_UP_END");
+    }
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+      GO_DOWN();
+      Serial.println("GO_DOWN_END");
+    }
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      GO_STOP();
+      Serial.println("GO_STOP_END");
+    }
+  }
+}
+
+void GO_UP() {
+  analogWrite(LPWM, 0);
+  {
+    for (int i = 0; i < 256; i++) {
+      analogWrite(RPWM, i);
+      delay(5);
+    }
+  }
+}
+
+
+void GO_DOWN() {
+  analogWrite(RPWM, 0);
+  for (int i = 0; i < 256; i++) {
+    analogWrite(LPWM, i);
+    delay(5);
+  }
+}
+
+void GO_STOP() {
+  analogWrite(LPWM, 0);
+  analogWrite(RPWM, 0);
+}
+
+
+V0.2 Slope Up Dn
+//#include "Arduino.h"
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+void setup()
+{
+
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      GO_UP();
+      Serial.println("GO_UP_END");
+    }
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+      GO_DOWN();
+      Serial.println("GO_DOWN_END");
+    }
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      GO_STOP();
+      Serial.println("GO_STOP_END");
+    }
+  }
+}
+
+void GO_UP() {
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(LPWM, 0);
+  {
+    for (int i = 0; i < 256; i++) {
+      analogWrite(RPWM, i);
+      delay(5);
+    }
+  }
+}
+
+
+void GO_DOWN() {
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(RPWM, 0);
+  for (int i = 0; i < 256; i++) {
+    analogWrite(LPWM, i);
+    delay(5);
+  }
+}
+
+void GO_STOP() {
+  digitalWrite(REN, LOW);
+  digitalWrite(LEN, LOW);
+  //  for (int i = 0; i < 256; i++) {
+  //    analogWrite(LPWM, (255 - i));
+  //    analogWrite(RPWM, (255 - i));
+  //    delay(5);
+  //  }
+  delay(200);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(RPWM, 0);
+  analogWrite(LPWM, 0);
+}
+
+
+V0.3 Display
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+
+void setup()
+{
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;); // Don't proceed, loop forever
+  }
+
+  // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  display.display();
+  delay(500); // Pause for 2 seconds
+
+  // Clear the buffer
+  display.clearDisplay();
+
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+  display.println("Starting");
+
+  display.setTextSize(2);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.println("Rambotics");
+
+  display.display();
+
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      GO_UP();
+      Serial.println("GO_UP_END");
+    }
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+      GO_DOWN();
+      Serial.println("GO_DOWN_END");
+    }
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      GO_STOP();
+      Serial.println("GO_STOP_END");
+    }
+  }
+}
+
+void GO_UP() {
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(LPWM, 0);
+  {
+    for (int i = 0; i < 256; i++) {
+      analogWrite(RPWM, i);
+      delay(5);
+    }
+  }
+}
+
+
+void GO_DOWN() {
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(RPWM, 0);
+  for (int i = 0; i < 256; i++) {
+    analogWrite(LPWM, i);
+    delay(5);
+  }
+}
+
+void GO_STOP() {
+  digitalWrite(REN, LOW);
+  digitalWrite(LEN, LOW);
+  //  for (int i = 0; i < 256; i++) {
+  //    analogWrite(LPWM, (255 - i));
+  //    analogWrite(RPWM, (255 - i));
+  //    delay(5);
+  //  }
+  delay(200);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  analogWrite(RPWM, 0);
+  analogWrite(LPWM, 0);
+}
+
+
+
+V0.5 Okay Display, no intterupt
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+void myDelay(int del) {
+  unsigned long myPrevMillis = millis();
+  while (millis() - myPrevMillis <= del);
+}
+
+void setup()
+{
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;); // Don't proceed, loop forever
+  }
+
+  // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  display.display();
+  delay(500); // Pause for 2 seconds
+
+  // Clear the buffer
+  display.clearDisplay();
+
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+  display.println("Starting");
+
+  display.setTextSize(2);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.println("Rambotics");
+
+  display.display();
+
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      //GO_UP();
+
+
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("Go Up");
+      display.display();
+
+
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(LPWM, 0);
+      {
+        for (int i = 0; i < 256; i++) {
+          analogWrite(RPWM, i);
+          myDelay(5);
+        }
+      }
+      Serial.println("GO_UP_END");
+    }
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+
+
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("Go Down");
+      display.display();
+
+
+      //GO_DOWN();
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(RPWM, 0);
+      for (int i = 0; i < 256; i++) {
+        analogWrite(LPWM, i);
+        myDelay(5);
+      }
+      Serial.println("GO_DOWN_END");
+    }
+
+
+
+
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      //GO_STOP();
+
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("STOP");
+      display.display();
+
+      digitalWrite(REN, LOW);
+      digitalWrite(LEN, LOW);
+      myDelay(200);
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(RPWM, 0);
+      analogWrite(LPWM, 0);
+
+      Serial.println("GO_STOP_END");
+    }
+    
+    else if (results.value != 0xFFFFFF){  // Avoid holding
+      Serial.println("Unknown IR-recieve");
+      display.clearDisplay();
+
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.cp437(true);         // Use full 256 char 'Code Page 437' font
+      display.println("Unknown IR:");
+
+      display.setTextSize(2);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+
+      display.display();
+    }
+  }
+}
+
+
+V2.0.1 bad ultrasound code
+
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+
+#include <Ultrasonic.h>
+
+#define TRIG_PIN 38
+#define ECHO_PIN 40
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+Ultrasonic ultrasonic(38, 40);
+int distance;
+int prev_prev_distance;
+int prev_distance;
+
+void myDelay(int del) {
+  unsigned long myPrevMillis = millis();
+  while (millis() - myPrevMillis <= del);
+}
+
+
+int moving = 0;
+
+
+
+void setup()
+{
+
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;); // Don't proceed, loop forever
+  }
+
+  // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  display.display();
+  delay(500); // Pause for 2 seconds
+
+  // Clear the buffer
+  display.clearDisplay();
+
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+  display.println("Starting");
+
+  display.setTextSize(2);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.println("Rambotics");
+
+  display.display();
+
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+
+  //Serial.println("loop active test");
+
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      //GO_UP();
+
+
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("Go Up");
+      display.display();
+
+
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(LPWM, 0);
+
+      for (int i = 0; i < 256; i++) {
+        prev_prev_distance = prev_distance;
+        prev_distance = distance;
+
+        distance = ultrasonic.read();
+        Serial.print("Distance in CM: ");
+        Serial.println(distance);
+
+
+        if (distance < 20 && prev_distance < 21 && prev_prev_distance < 22) {
+          Serial.println("too close");
+
+          digitalWrite(REN, LOW);
+          digitalWrite(LEN, LOW);
+
+          display.clearDisplay();
+
+          display.setTextSize(1);      // Normal 1:1 pixel scale
+          display.setTextColor(WHITE); // Draw white text
+          display.setCursor(0, 0);     // Start at top-left corner
+          display.cp437(true);         // Use full 256 char 'Code Page 437' font
+          display.println("Distance too close");
+
+          display.setTextSize(2);      // Normal 1:1 pixel scale
+          display.setTextColor(WHITE); // Draw white text
+          display.println((results.value), HEX);
+
+          display.display();
+
+          delay(20);
+        }
+        // if everything is fine, accelerate
+        else {
+          analogWrite(RPWM, i);
+          myDelay(5);
+        }
+
+      }
+
+      moving = 1;
+      Serial.println("GO_UP_END");
+    }
+
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+
+
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("Go Down");
+      display.display();
+
+
+      //GO_DOWN();
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(RPWM, 0);
+      for (int i = 0; i < 256; i++) {
+        analogWrite(LPWM, i);
+        myDelay(5);
+      }
+      Serial.println("GO_DOWN_END");
+    }
+
+
+
+
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      //GO_STOP();
+      moving = 0;
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("STOP");
+      display.display();
+
+      digitalWrite(REN, LOW);
+      digitalWrite(LEN, LOW);
+      myDelay(200);
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(RPWM, 0);
+      analogWrite(LPWM, 0);
+
+      Serial.println("GO_STOP_END");
+    }
+
+    else if (results.value != 0xFFFFFF) { // Avoid holding
+      Serial.println("Unknown IR-recieve");
+      display.clearDisplay();
+
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.cp437(true);         // Use full 256 char 'Code Page 437' font
+      display.println("Unknown IR:");
+
+      display.setTextSize(2);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+
+      display.display();
+    }
+  }
+
+  prev_prev_distance = prev_distance;
+  prev_distance = distance;
+
+  distance = ultrasonic.read();
+  Serial.print("Distance in CM: ");
+  Serial.println(distance);
+  display.clearDisplay();
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(25, 22);     // Start at top-left corner
+  display.print(String(distance));
+  display.print("cm");
+  display.display();
+
+  if (moving == 1 && distance < 20 && prev_distance < 21 && prev_prev_distance < 22) {
+    Serial.println("too close");
+
+    digitalWrite(REN, LOW);
+    digitalWrite(LEN, LOW);
+
+    display.clearDisplay();
+
+    display.setTextSize(1);      // Normal 1:1 pixel scale
+    display.setTextColor(WHITE); // Draw white text
+    display.setCursor(0, 0);     // Start at top-left corner
+    display.cp437(true);         // Use full 256 char 'Code Page 437' font
+    display.println("Distance too close");
+
+    display.setTextSize(2);      // Normal 1:1 pixel scale
+    display.setTextColor(WHITE); // Draw white text
+    display.println((results.value), HEX);
+
+    display.display();
+  }
+
+
+
+}
+
+
+
+//void checkdistance()
+//{
+//
+//  if (distance < 20 && prev_distance < 21 && prev_prev_distance < 22) {
+//    Serial.println("too close");
+//    display.clearDisplay();
+//
+//    display.setTextSize(1);      // Normal 1:1 pixel scale
+//    display.setTextColor(WHITE); // Draw white text
+//    display.setCursor(0, 0);     // Start at top-left corner
+//    display.cp437(true);         // Use full 256 char 'Code Page 437' font
+//    display.println("Distance too close");
+//
+//    display.setTextSize(2);      // Normal 1:1 pixel scale
+//    display.setTextColor(WHITE); // Draw white text
+//    display.println((results.value), HEX);
+//
+//    display.display();
+//  }
+//}
+
+
+V2.2
+Goodish ultrasound stopping
+
+
+#include <IRremote.h>
+
+#define IRHIGH A15
+#define IRLOW A14
+
+const int RECV_PIN = A13;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+#define RPWM 5  //pin 9 dies
+#define LPWM 8
+#define REN 7
+#define LEN 6
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+
+#include <Ultrasonic.h>
+
+#define TRIG_PIN 38
+#define ECHO_PIN 40
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+Ultrasonic ultrasonic(38, 40);
+int distance;
+int prev_prev_distance;
+int prev_distance;
+
+void myDelay(int del) {
+  unsigned long myPrevMillis = millis();
+  while (millis() - myPrevMillis <= del);
+}
+
+
+int moving = 0;
+
+
+
+void setup()
+{
+
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;); // Don't proceed, loop forever
+  }
+
+  // Show initial display buffer contents on the screen --
+  // the library initializes this with an Adafruit splash screen.
+  display.display();
+  delay(500); // Pause for 2 seconds
+
+  // Clear the buffer
+  display.clearDisplay();
+
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.cp437(true);         // Use full 256 char 'Code Page 437' font
+  display.println("Starting");
+
+  display.setTextSize(2);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.println("Rambotics");
+
+  display.display();
+
+  Serial.begin(9600);
+  pinMode(RPWM, OUTPUT);
+  pinMode(LPWM, OUTPUT);
+  pinMode(REN, OUTPUT);
+  pinMode(LEN, OUTPUT);
+  digitalWrite(REN, HIGH);
+  digitalWrite(LEN, HIGH);
+  irrecv.enableIRIn();
+  irrecv.blink13(true);
+  pinMode(IRHIGH, OUTPUT);
+  pinMode(IRLOW, OUTPUT);
+  digitalWrite(IRHIGH, HIGH);
+  digitalWrite(IRLOW, LOW);
+
+}
+
+void loop()
+{
+  display.clearDisplay();
+  //Serial.println("loop active test");
+
+bailout:
+
+  if (irrecv.decode(&results)) {
+    Serial.println(results.value, HEX);
+    irrecv.resume();
+
+    //WARNING!!!!! The next if is within recv result!!!!!!
+
+    if (results.value == 0xFF629D) { // UP
+      Serial.println("Button UP");
+      //GO_UP();
+
+
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("Go Up");
+      display.display();
+
+
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(LPWM, 0);
+
+      for (int i = 0; i < 256; i++) {
+        prev_prev_distance = prev_distance;
+        prev_distance = distance;
+
+        distance = ultrasonic.read();
+        Serial.print("Distance in CM: ");
+        Serial.println(distance);
+
+
+        if (distance < 20 && prev_distance < 21 && prev_prev_distance < 22) {
+          Serial.println("too close");
+
+          digitalWrite(REN, LOW);
+          digitalWrite(LEN, LOW);
+
+          display.clearDisplay();
+
+          display.setTextSize(1);      // Normal 1:1 pixel scale
+          display.setTextColor(WHITE); // Draw white text
+          display.setCursor(0, 0);     // Start at top-left corner
+          display.cp437(true);         // Use full 256 char 'Code Page 437' font
+          display.println("Distance too close");
+
+          display.setTextSize(2);      // Normal 1:1 pixel scale
+          display.setTextColor(WHITE); // Draw white text
+          display.println((results.value), HEX);
+
+          display.display();
+
+          delay(100);
+          goto bailout;
+        }
+        // if everything is fine, accelerate
+        else {
+          analogWrite(RPWM, i);
+          myDelay(5);
+        }
+
+      }
+
+      moving = 1;
+      Serial.println("GO_UP_END");
+    }
+
+    else if (results.value == 0xFFA857) { // DOWN
+      Serial.println("Button DOWN");
+      display.clearDisplay();
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("Go Down");
+      //GO_DOWN();
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(RPWM, 0);
+      display.display();
+      for (int i = 0; i < 256; i++) {
+        analogWrite(LPWM, i);
+        myDelay(5);
+      }
+      Serial.println("GO_DOWN_END");
+
+      goto bailout;
+
+
+    }
+
+
+
+
+    else if (results.value == 0xFF02FD) { // STOP
+      Serial.println("Button STOP");
+      //GO_STOP();
+      moving = 0;
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.setTextSize(3);      // Normal 1:1 pixel scale
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.println("STOP");
+      display.display();
+
+      digitalWrite(REN, LOW);
+      digitalWrite(LEN, LOW);
+      myDelay(300);
+      digitalWrite(REN, HIGH);
+      digitalWrite(LEN, HIGH);
+      analogWrite(RPWM, 0);
+      analogWrite(LPWM, 0);
+      
+      Serial.println("GO_STOP_END");
+      goto bailout;
+    }
+
+    else if (results.value != 0xFFFFFF) { // Avoid holding
+      Serial.println("Unknown IR-recieve");
+      display.setTextSize(1);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.setCursor(0, 0);     // Start at top-left corner
+      display.cp437(true);         // Use full 256 char 'Code Page 437' font
+      display.println("Unknown IR code:");
+
+      display.setTextSize(2);      // Normal 1:1 pixel scale
+      display.setTextColor(WHITE); // Draw white text
+      display.println((results.value), HEX);
+      display.display();
+      delay(30);
+      goto bailout;
+    }
+  }
+
+  prev_prev_distance = prev_distance;
+  prev_distance = distance;
+
+  distance = ultrasonic.read();
+  Serial.print("Distance in CM: ");
+  Serial.println(distance);
+  display.clearDisplay();
+  display.setTextSize(3);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.print(String(distance));
+  display.print("cm");
+
+  if (moving == 1 && distance < 20 && prev_distance < 21 && prev_prev_distance < 22) {
+    Serial.println("too close");
+
+    digitalWrite(REN, LOW);
+    digitalWrite(LEN, LOW);
+
+    display.clearDisplay();
+
+    display.setTextSize(1);      // Normal 1:1 pixel scale
+    display.setTextColor(WHITE); // Draw white text
+    display.setCursor(0, 0);     // Start at top-left corner
+    display.cp437(true);         // Use full 256 char 'Code Page 437' font
+    display.println("Distance too close");
+
+    display.setTextSize(2);      // Normal 1:1 pixel scale
+    display.setTextColor(WHITE); // Draw white text
+    display.println((results.value), HEX);
+
+
+  }
+
+  display.display();
+
+
+}
+
+
+
+//void checkdistance()
+//{
+//
+//  if (distance < 20 && prev_distance < 21 && prev_prev_distance < 22) {
+//    Serial.println("too close");
+//    display.clearDisplay();
+//
+//    display.setTextSize(1);      // Normal 1:1 pixel scale
+//    display.setTextColor(WHITE); // Draw white text
+//    display.setCursor(0, 0);     // Start at top-left corner
+//    display.cp437(true);         // Use full 256 char 'Code Page 437' font
+//    display.println("Distance too close");
+//
+//    display.setTextSize(2);      // Normal 1:1 pixel scale
+//    display.setTextColor(WHITE); // Draw white text
+//    display.println((results.value), HEX);
+//
+//    display.display();
+//  }
+//}
+
